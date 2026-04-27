@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Chat Summarizer</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --blue: #0078D4;
+    --blue-dark: #005A9E;
+    --blue-light: #EFF6FC;
+    --surface: #F8F8F7;
+    --border: #E1DFDD;
+    --text: #201F1E;
+    --muted: #605E5C;
+    --hint: #A19F9D;
+    --white: #ffffff;
+    --success: #107C10;
+    --success-bg: #F1FBF1;
+    --error: #A4262C;
+    --error-bg: #FDF3F4;
+    --radius: 10px;
+    --radius-lg: 16px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--surface);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    background: var(--blue);
+    padding: 0 32px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .header-icon {
+    width: 32px;
+    height: 32px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  header h1 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: -0.01em;
+  }
+
+  .header-badge {
+    font-size: 11px;
+    color: rgba(255,255,255,0.7);
+    background: rgba(255,255,255,0.15);
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-weight: 400;
+  }
+
+  .subtitle-bar {
+    background: var(--blue-light);
+    border-bottom: 1px solid #C7E0F4;
+    padding: 10px 32px;
+    font-size: 13px;
+    color: #004578;
+    text-align: center;
+  }
+
+  main {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    padding: 36px 24px;
+  }
+
+  .card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 720px;
+    overflow: hidden;
+    animation: fadeUp .4s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-section {
+    padding: 24px 28px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .card-section:last-child { border-bottom: none; }
+
+  .field-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .field-label svg { opacity: .6; }
+
+  textarea {
+    width: 100%;
+    min-height: 180px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    resize: vertical;
+    background: var(--white);
+    transition: border-color .15s;
+    line-height: 1.6;
+    outline: none;
+  }
+
+  textarea::placeholder { color: var(--hint); }
+  textarea:focus { border-color: var(--blue); }
+
+  .char-count {
+    font-size: 11px;
+    color: var(--hint);
+    text-align: right;
+    margin-top: 6px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .action-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .hint-text {
+    font-size: 12px;
+    color: var(--hint);
+  }
+
+  button {
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    padding: 12px 28px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background .15s, transform .1s;
+    min-width: 160px;
+    justify-content: center;
+  }
+
+  button:hover:not(:disabled) { background: var(--blue-dark); }
+  button:active:not(:disabled) { transform: scale(0.98); }
+  button:disabled { opacity: .6; cursor: not-allowed; }
+
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    display: none;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .result-box {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--text);
+    white-space: pre-wrap;
+    min-height: 120px;
+    font-family: 'DM Sans', sans-serif;
+    transition: border-color .2s;
+  }
+
+  .result-box.has-content {
+    border-color: #C7E0F4;
+    background: var(--blue-light);
+  }
+
+  .result-placeholder {
+    color: var(--hint);
+    font-style: italic;
+    font-size: 13px;
+  }
+
+  .status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+    min-height: 20px;
+  }
+
+  .status-msg {
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .status-msg.success { color: var(--success); }
+  .status-msg.error { color: var(--error); }
+  .status-msg.loading { color: var(--blue); }
+
+  .copy-btn {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 12px;
+    font-size: 12px;
+    min-width: unset;
+    display: none;
+  }
+
+  .copy-btn:hover { background: var(--surface); color: var(--text); }
+  .copy-btn.visible { display: flex; }
+
+  footer {
+    text-align: center;
+    padding: 16px;
+    font-size: 11px;
+    color: var(--hint);
+    border-top: 1px solid var(--border);
+    background: var(--white);
+  }
+
+  @media (max-width: 500px) {
+    header { padding: 0 16px; }
+    .card-section { padding: 18px 16px; }
+    .action-row { flex-direction: column; align-items: stretch; }
+    button { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="header-icon">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+        <path d="M3 4h12M3 8h8M3 12h10" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <h1>Chat Summarizer</h1>
+  </div>
+  <span class="header-badge">Powered by Microsoft Copilot</span>
+</header>
+
+<div class="subtitle-bar">
+  Paste a client conversation below and receive a structured AI summary instantly
+</div>
+
+<main>
+  <div class="card">
+
+    <div class="card-section">
+      <div class="field-label">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <rect x="1" y="1" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.2"/>
+          <path d="M3.5 4.5h7M3.5 7h5M3.5 9.5h6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+        Client chat transcript
+      </div>
+      <textarea id="chatInput" placeholder="Paste the full client chat conversation here..."></textarea>
+      <div class="char-count" id="charCount">0 characters</div>
+    </div>
+
+    <div class="card-section">
+      <div class="action-row">
+        <span class="hint-text">The AI will structure the summary into key sections</span>
+        <button id="summarizeBtn" onclick="summarize()">
+          <svg id="btnIcon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M2 4h12M2 8h8M2 12h10" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <div class="spinner" id="spinner"></div>
+          <span id="btnText">Summarize chat</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="card-section">
+      <div class="field-label">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/>
+          <path d="M7 4.5v3l2 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+        Summary
+      </div>
+      <div class="result-box" id="resultBox">
+        <span class="result-placeholder">Your structured summary will appear here after clicking Summarize.</span>
+      </div>
+      <div class="status-row">
+        <div class="status-msg" id="statusMsg"></div>
+        <button class="copy-btn" id="copyBtn" onclick="copyResult()">Copy summary</button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer>Chat Summarizer &mdash; Internal tool &mdash; Do not share externally</footer>
+
+<script>
+const FLOW_URL = "https://long-river-2bd9.gonzalovallerga.workers.dev/";
+
+const chatInput = document.getElementById('chatInput');
+const charCount = document.getElementById('charCount');
+const resultBox = document.getElementById('resultBox');
+const statusMsg = document.getElementById('statusMsg');
+const copyBtn  = document.getElementById('copyBtn');
+const btn      = document.getElementById('summarizeBtn');
+const spinner  = document.getElementById('spinner');
+const btnIcon  = document.getElementById('btnIcon');
+const btnText  = document.getElementById('btnText');
+
+chatInput.addEventListener('input', () => {
+  const n = chatInput.value.length;
+  charCount.textContent = n.toLocaleString() + ' character' + (n !== 1 ? 's' : '');
+});
+
+function setLoading(on) {
+  btn.disabled = on;
+  spinner.style.display = on ? 'block' : 'none';
+  btnIcon.style.display = on ? 'none' : 'block';
+  btnText.textContent = on ? 'Summarizing...' : 'Summarize chat';
+}
+
+function setStatus(msg, type) {
+  statusMsg.textContent = msg;
+  statusMsg.className = 'status-msg ' + (type || '');
+}
+
+async function summarize() {
+  const text = chatInput.value.trim();
+  if (!text) {
+    setStatus('Please paste a chat transcript first.', 'error');
+    return;
+  }
+
+  setLoading(true);
+  setStatus('Running AI summary...', 'loading');
+  resultBox.className = 'result-box';
+  resultBox.innerHTML = '<span class="result-placeholder">Generating summary, please wait...</span>';
+  copyBtn.classList.remove('visible');
+
+  try {
+    const res = await fetch(FLOW_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chattext: text })
+    });
+
+    if (!res.ok) throw new Error('Flow returned status ' + res.status);
+
+    const data = await res.json();
+    const summary = data.summaryoutput || data.text || data.response || JSON.stringify(data);
+
+    resultBox.className = 'result-box has-content';
+    resultBox.textContent = summary;
+    setStatus('Summary generated successfully', 'success');
+    copyBtn.classList.add('visible');
+
+  } catch (err) {
+    resultBox.className = 'result-box';
+    resultBox.innerHTML = '<span class="result-placeholder">Something went wrong. Please try again or check the flow is running.</span>';
+    setStatus('Error: ' + err.message, 'error');
+  }
+
+  setLoading(false);
+}
+
+function copyResult() {
+  const text = resultBox.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    copyBtn.textContent = 'Copied!';
+    setTimeout(() => copyBtn.textContent = 'Copy summary', 2000);
+  });
+}
+</script>
+</body>
+</html>
