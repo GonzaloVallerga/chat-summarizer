@@ -1,0 +1,44 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.16/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.16",
+  "version": "1.0.0",
+  "id": "com.yourcompany.chatsummarizer",
+  "packageName": "com.yourcompany.chatsummarizer",
+  "name": {
+    "short": "Chat Summarizer",
+    "full": "Client Chat Summarizer"
+  },
+  "developer": {
+    "name": "Your Company",
+    "websiteUrl": "https://yourusername.github.io/chat-summarizer",
+    "privacyUrl": "https://yourusername.github.io/chat-summarizer",
+    "termsOfUseUrl": "https://yourusername.github.io/chat-summarizer"
+  },
+  "description": {
+    "short": "Summarise client chats instantly",
+    "full": "Paste a client chat and receive a structured AI summary powered by Microsoft Copilot"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "accentColor": "#0078D4",
+  "configurableTabs": [
+    {
+      "configurationUrl": "https://yourusername.github.io/chat-summarizer",
+      "canUpdateConfiguration": false,
+      "scopes": ["team", "groupchat"]
+    }
+  ],
+  "staticTabs": [
+    {
+      "entityId": "chatsummarizer",
+      "name": "Chat Summarizer",
+      "contentUrl": "https://yourusername.github.io/chat-summarizer",
+      "websiteUrl": "https://yourusername.github.io/chat-summarizer",
+      "scopes": ["personal"]
+    }
+  ],
+  "permissions": ["identity", "messageTeamMembers"],
+  "validDomains": ["yourusername.github.io"]
+}
