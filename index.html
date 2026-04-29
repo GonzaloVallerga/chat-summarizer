@@ -258,6 +258,9 @@
   }
 
   .copy-btn:hover { background: var(--surface); color: var(--text); }
+
+  .clear-btn { background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: 6px; padding: 4px 12px; font-size: 12px; min-width: unset; display: flex; align-items: center; gap: 5px; cursor: pointer; transition: background .15s, color .15s; }
+  .clear-btn:hover { background: #FDF3F4; color: var(--error); border-color: #F5C4C4; }
   .copy-btn.visible { display: flex; }
 
   footer {
@@ -307,7 +310,7 @@
         Client chat transcript
       </div>
       <textarea id="chatInput" placeholder="Paste the full client chat conversation here..."></textarea>
-      <div class="char-count" id="charCount">0 characters</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;"><button class="clear-btn" id="clearBtn" onclick="clearChat()"><svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 2l9 9M11 2l-9 9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>Clear</button><div class="char-count" id="charCount">0 characters</div></div>
     </div>
 
     <div class="card-section">
@@ -412,6 +415,12 @@ async function summarize() {
   }
 
   setLoading(false);
+}
+
+function clearChat() {
+  chatInput.value = "";
+  charCount.textContent = "0 characters";
+  chatInput.focus();
 }
 
 function copyResult() {
